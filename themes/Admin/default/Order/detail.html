@@ -1,0 +1,230 @@
+<extend name="Public:base"/>
+
+<block name="main">
+    <input type="hidden" name="id" id="orderid" value="{$order['id']}" />
+
+    <div class="table-toolbar">
+        <button class="btn btn-primary" {if $order['status']!=0} disabled {else} onclick="order_status('status',1,'已确认');"{/if}>确认</button>
+        <button class="btn btn-primary" {if $order['status']==3 || $order['pay_status']>=2} disabled {else} onclick="order_status('pay_status',2,'己完成');"{/if}>支付</button>
+        <button class="btn btn-primary" {if $order['pay_status']>3 || $order['status']==3 || $order['shipping_status']!=0} disabled {else} onclick="order_status('shipping_status',1,'已发货');"{/if}>发货</button>
+        <button class="btn btn-primary" {if $order['pay_status']>3 || $order['status']==3 || $order['status']==2} disabled {else} onclick="order_status('status',2,'己完成');"{/if}>完成</button>
+        <button class="btn btn-primary" {if $order['pay_status']!=3} disabled {else} onclick="order_status('pay_status',4,'己退款');"{/if}>退款</button>
+        <button class="btn btn-primary" {if $order['pay_status']!=3} disabled {else} onclick="order_status('status',4,'己退货');"{/if}>退货</button>
+        <button class="btn btn-primary" {if $order['status']>=2 || $order['pay_status']!=0 ||  $order['shipping_status']!=0 } disabled {else}onclick="order_status('status',3,'作废订单');"{/if}>作废</button>
+        <button class="btn btn-primary" {if $order['status']>=2 || $order['shipping_status']!=0 } disabled {else}onclick="order_status('status',5,'取消订单');"{/if}>取消</button>
+        订单装态：{:L("order_status_".$order['status'])} | {:L("pay_status_".$order['pay_status'])} | {:L("shipping_status_".$order['shipping_status'])}
+    </div>
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="panel panel-default">
+                <div class="panel-heading">订单信息</div>
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        <strong>订单编号：</strong>{$order['sn']}
+                    </li>
+                    <li class="list-group-item">
+                        <strong>创建时间：</strong>
+                        {$order['add_time']|toDate=###,'Y-m-d H:i:s'}
+                    </li>
+                    <li class="list-group-item">
+                        <strong>支付方式：</strong>
+                        {if $order[pay_name]}
+                            {$order.pay_name} &nbsp;<input type="button" class="btn btn-sm btn-primary" value="{:L(edit)}" onclick="openwin('{:U("Order/edit?do=payment&id=".$order[id]."&isajax=1")}','支付方式','700px','550px');">
+                        {else}
+                            N/A
+                        {/if}
+                    </li>
+                    <li class="list-group-item">
+                        <strong>支付时间：</strong>
+                        {if $order['pay_time']}
+                            {$order['pay_time']|toDate=###,'Y-m-d H:i:s'}
+                        {else}
+                            N/A
+                        {/if}
+                    </li>
+
+                    <li class="list-group-item">
+                        <strong>配送方式：</strong>
+                        {if $order[shipping_name]}
+                            {$order.shipping_name}
+                            <input type="button" class="btn btn-sm btn-primary" value="修改" onclick="openwin({:U("Order/edit?do=shipping&id=".$order[id]."&isajax=1")}','配送方式','700px','550px');">
+                        {else}
+                            N/A
+                        {/if}
+                    </li>
+                    <li class="list-group-item">
+                        <strong>发货时间：</strong>
+                        {if $order['shipping_time']}
+                            {$order['shipping_time']|toDate=###,'Y-m-d H:i:s'}
+                        {else}
+                            N/A
+                        {/if}
+                    </li>
+
+                    <li class="list-group-item">
+                        <strong>货单号码：</strong>
+                        {if $order['shipping_sn']}
+                            {$order['shipping_sn']} &nbsp; <a href="javascript:void(0);" onclick="openwin('{:U("Order/edit?do=shipping_show&id=".$order[id]."&isajax=1")}','查看物流',600,350);">查看物流</a>
+                        {else}
+                        N/A <input type="button" class="btn btn-sm btn-primary" value="{:L(edit)}" onclick="openwin('{:U("Order/edit?do=shipping_sn&id=".$order[id]."&isajax=1")}','货单号码','700px','550px');">
+                        {/if}
+                    </li>
+                    <li class="list-group-item">
+                        <strong>收货时间：</strong>
+                        <td>
+                            {if $order['accept_time']}
+                                {$order['accept_time']|toDate=###,'Y-m-d H:i:s'}
+                            {else}
+                                N/A
+                            {/if}
+                        </td>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <div class="row">
+                        <div class="col-md-10">收货人信息</div>
+                        <div class="col-md-2"><a class="btn btn-primary btn-sm pull-right" href="javascript:;" onclick="openwin('{:U("Order/edit?do=address&id=".$order[id]."&isajax=1")}','收货人信息','700px','550px');">修改</a></div>
+                    </div>
+                </div>
+
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        <strong>地址：</strong>
+                        {$Area[$order[province]]} - {$Area[$order[city]]}   -  {$Area[$order[area]]} &nbsp;{$order.address}
+                    </li>
+                    <li class="list-group-item">
+                        <strong>姓名：</strong>
+                        {$order.consignee}
+                    </li>
+
+                    <li class="list-group-item">
+                        <strong>电话：</strong>
+                        {$order.tel}
+                    </li>
+                    <li class="list-group-item">
+                        <strong>邮编：</strong>
+                        {$order.zipcode}
+                    </li>
+
+                    <li class="list-group-item">
+                        <strong>手机：</strong>
+                        {$order.mobile}
+                    </li>
+                    <li class="list-group-item">
+                        <strong>邮箱：</strong>
+                        {$order.email}
+                    </li>
+                </ul
+            </div>
+        </div>
+
+    </div>
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-md-6">商品信息</div>
+                    <div class="col-md-6"><a class="bg-primary pull-right" onclick="openwin('{:U("Order/edit?do=data&id=".$order[id]."&isajax=1")}',title,'700px','550px');">修改</a></div>
+                </div>
+            </div>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th width="15%">商品图片</th>
+                        <th width="35%">商品名称</th>
+                        <th width="10%">单价</th>
+                        <th width="12%">数量</th>
+                        <th width="13%">小计（RMB）</th>
+                        <th>管理操作</th>
+                    </tr>
+                </thead>
+                <if condition="empty($order_data)">
+                <tr>
+                    <td colspan="6"  style="padding:10px;border:0;color:#FB0000;" align="center">{:L('Order_no_product')}</td>
+                </tr>
+                <else/>
+                <volist name="order_data" id="vo">
+                <tr>
+                    <td height="70" style="border-left:none;"><img src="{$vo['product_thumb']|thumb}" width="60" height="60"/></td>
+                    <td>{$vo['product_name']}</td>
+                    <td>{$vo['product_price']}</td>
+                    <td>
+                    {$vo['number']}
+                </td>
+                <td ><span class="count_price" id="count_price_{$vo['id']}">{$vo['price']|number_format=###,2}</span></td>
+                <td> <a href="{$vo['product_url']}" target="_blank">{:L('Order_view_product')}</a></td>
+                </tr>
+                 </volist>
+                <tr align="center">
+                    <td colspan="5" align="right">{:L('Order_product_count')}：</td>
+                    <td><b style="color:#FB0000;font-size:14px;">{$amount|number_format=###,2}RMB</b></td>
+                </tr>
+                </if>
+            </table>
+        </div>
+    </div>
+
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">费用信息
+                <input type="button" class="btn btn-sm btn-primary" value="修改" onclick="openwin('{:U("Order/edit?do=money&id=".$order[id]."&isajax=1")}','费用信息','600px','350px');">
+            </div>
+            <table class="table">
+                <tr>
+                    <td align="right">{:L('Order_product_amount')}：￥{$order[amount]|number_format=###,2}
+                    {if $order[shipping_fee]>0}+ {:L('Order_shipping_fee')}：￥{$order[shipping_fee]|number_format=###,2} {/if}
+                    {if $order[insure_fee]>0}+ {:L('Order_shipping_is_insure')}：￥{$order[insure_fee]|number_format=###,2} {/if}
+                    {if $order[pay_fee]>0}+ {:L('Order_pay_fee')}：￥{$order[pay_fee]|number_format=###,2} {/if}
+                    {if $order[invoice_fee]>0}+ {:L('Order_invoice_fee')}：￥{$order[invoice_fee]|number_format=###,2} <br>{/if}
+                    {if $order[discount]!=0}- {:L('Order_discount')}：￥{$order[discount]|number_format=###,2}{/if}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                </td>
+
+                </tr>
+                <tr>
+                    <td align="right">
+                        <p style="font-size:16px;padding:10px 0;">
+                        <strong >订单总价：</strong>
+                            <b style="font-size:16px;">￥{$order[order_amount]|number_format=###,2}</b>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        </div>
+    </form>
+
+<script>
+function order_status(type,value ,msg){
+
+    var datas={'type':type,'value':value,'dosubmit':'1'};
+    layer.confirm('确定要修改订单状态?(<font color="red">'+msg+'</font>)?', {icon: 3, title:'警告'}, function(index){
+        $.ajax({
+            type:"POST",
+            url: ROOT+"/index.php?g=Admin&m=Order&a=edit&do=status&id={$order.id}",
+            data:  datas,
+            timeout:"4000",
+            dataType:"JSON",
+            success: function(data){
+                layer.msg(data.msg);
+                setTimeout(function(){
+                    window.location.reload();
+                },2000);
+            },
+            error:function(){
+                layer.msg(data.msg);
+                return false;
+            }
+        });
+        layer.close(index);
+    });
+
+}
+</script>
+</block>

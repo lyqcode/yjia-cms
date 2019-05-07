@@ -1,0 +1,12 @@
+/cache
+uploads/
+runtime/
+public/data/
+install.lock
+.DS_Store
+.access_token
+.idea
+/themes/Wap/cn/Public/css/.sass-cache/
+/themes/Wap/cn/Public/node_modules/
+sitemap.xml
+/poster/*.html

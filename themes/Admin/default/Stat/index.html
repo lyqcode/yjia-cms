@@ -1,0 +1,247 @@
+<extend name="Public:base"/>
+
+<block name="main">
+<link rel="stylesheet" type="text/css" media="all" href="__STATIC__/daterangepicker/daterangepicker.css" />
+<script type="text/javascript" src="__STATIC__/daterangepicker/moment.js"></script>
+<script type="text/javascript" src="__STATIC__/daterangepicker/daterangepicker.js"></script>
+    <style>
+        .selectbox {
+            background: #fff;
+            color: #333;
+            padding: 8px;
+            line-height: 18px;
+            border-radius: 4px;
+            border-width: 0 1px 4px;
+            float: right;
+        }
+        .selectbox .caret {
+            top: -2px;
+            position: relative;
+        }
+        .caret {
+            display: inline-block;
+            width: 0;
+            height: 0;
+            margin-left: 2px;
+            vertical-align: middle;
+            border-top: 4px solid;
+            border-right: 4px solid transparent;
+            border-left: 4px solid transparent;
+        }
+    </style>
+<div class="card">
+    <div class="card-header">
+        <div class="w-150px pull-sm-left">
+            <select name="type" id="type" class="form-control">
+                <option value="1">PC端统计图表</option>
+                <option value="2">手机端统计图表</option>
+            </select>
+        </div>
+
+        <div id="reportrange" class="pull-sm-right selectbox dateRange">
+            <i class="fa fa-calendar"></i>
+            <span id="searchDateRange"></span>
+            <b class="caret"></b>
+        </div>
+    </div>
+
+    <div class="card-block">
+        <div id="loading" style="text-align: center;display: none">
+            <img src="__IMG__/loading.gif" alt="">
+        </div>
+        <div id="chart" style="height:300px;"></div>
+    </div>
+</div>
+</block>
+
+</div>
+
+<block name="script">
+
+<!--<script src="__STATIC__/highcharts.js"></script>-->
+<script src="http://cdn.hcharts.cn/highcharts/highcharts.js"></script>
+<script src="http://cdn.hcharts.cn/highcharts/highcharts-more.js"></script>
+<script src="http://cdn.hcharts.cn/highcharts/modules/exporting.js"></script>
+<!--<script src="__STATIC__/exporting.js"></script>-->
+<script>
+$(function(){
+
+    $("#loading").css("display", "block");
+    var start = moment().subtract('days', 6);
+    var end = moment();
+    var data = {
+        'type':1,
+        'start_m':start.format('MM'),
+        'start_d':start.format('DD'),
+        'start_y':start.format('YYYY'),
+        'end_m':end.format('MM'),
+        'end_d':end.format('DD'),
+        'end_y':end.format('YYYY')
+    };
+    $.get("{:U('Admin/Stat/get_chart')}", data, function(data){
+                $("#loading").css("display", "none");
+                get_chart('chart',data.type1,data.type2,data.categories,"PC端统计图表",1);
+            },"json");
+
+    //时间插件
+    $('#reportrange span').html(moment().subtract('days', 6).format('YYYY-MM-DD') + ' - ' + moment().format('YYYY-MM-DD'));
+
+    $('#reportrange').daterangepicker({
+            //startDate: moment().startOf('day'),
+            //endDate: moment(),
+            //minDate: '01/01/2012',    //最小时间
+            maxDate : moment(), //最大时间
+            dateLimit : {
+                days : 60
+            }, //起止时间的最大间隔
+            showDropdowns : true,
+            showWeekNumbers : false, //是否显示第几周
+            //timePicker : true, //是否显示小时和分钟
+            //timePickerIncrement : 60, //时间的增量，单位为分钟
+            //timePicker12Hour : false, //是否使用12小时制来显示时间
+            ranges : {
+                //'最近1小时': [moment().subtract('hours',1), moment()],
+                //'今日': [moment().startOf('day'), moment()],
+                //'昨日': [moment().subtract('days', 1).startOf('day'), moment().subtract('days', 1).endOf('day')],
+                '最近7日': [moment().subtract('days', 6), moment()],
+                '最近30日': [moment().subtract('days', 29), moment()]
+            },
+            opens : 'left', //日期选择框的弹出位置
+            buttonClasses : [ 'btn btn-default' ],
+            applyClass : 'btn-small btn-primary blue',
+            cancelClass : 'btn-small',
+            separator : ' to ',
+            locale : {
+                applyLabel : '确定',
+                cancelLabel : '取消',
+                fromLabel : '起始时间',
+                toLabel : '结束时间',
+                customRangeLabel : '自定义',
+                daysOfWeek : [ '日', '一', '二', '三', '四', '五', '六' ],
+                monthNames : [ '一月', '二月', '三月', '四月', '五月', '六月',
+                    '七月', '八月', '九月', '十月', '十一月', '十二月' ],
+                firstDay : 1,
+                format : 'YYYY-MM-DD'
+            }
+        }, function(start, end) {
+            $('#reportrange span').html(start.format('YYYY-MM-DD') + ' - ' + end.format('YYYY-MM-DD'));
+
+            render_chart(start,end);
+        });
+
+
+    $("#type").change(function() {
+        var type = $('#type').val();
+        var text = $("#type").find("option:selected").text();
+        $("#loading").css("display", "block");
+        var start = moment().subtract('days', 6);
+        var end = moment();
+        var data = {
+            'type':type,
+            'start_m':start.format('MM'),
+            'start_d':start.format('DD'),
+            'start_y':start.format('YYYY'),
+            'end_m':end.format('MM'),
+            'end_d':end.format('DD'),
+            'end_y':end.format('YYYY')
+        };
+        $.get("{:U('Admin/Stat/get_chart')}", data, function(data){
+            $("#loading").css("display", "none");
+            get_chart('chart',data.type1,data.type2,data.categories,text,1);
+        },"json");
+    })
+});
+
+
+function render_chart(start,end) {
+    var type = $('#type').val();
+    var text = $("#type").find("option:selected").text();
+    var data = {
+        'type':type,
+        'start_m':start.format('MM'),
+        'start_d':start.format('DD'),
+        'start_y':start.format('YYYY'),
+        'end_m':end.format('MM'),
+        'end_d':end.format('DD'),
+        'end_y':end.format('YYYY')
+    };
+
+    $("#loading").css("display", "block");
+    $.get("{:U('Admin/Stat/get_chart')}", data,
+            function(data){
+                $("#loading").css("display", "none");
+                get_chart('chart',data.type1,data.type2,data.categories,text,1);
+            },"json");
+}
+
+function get_chart(id,data1,data2,categories,text,step){
+    var stepval = step ? step: 1;
+
+    Highcharts.setOptions({
+        colors:['#27A9E3','#FF6666']
+    });
+    $('#'+id).highcharts({
+        chart: {
+            renderTo: 'container',
+            defaultSeriesType: 'line',//图表类别，可取值有：line、spline、area、areaspline、bar、column等
+        },
+        credits:{
+            enabled:false
+        },
+        exporting :{
+            enabled :true
+        },
+        title: {
+            text: text,
+            x: -20
+        },
+        xAxis: {
+            type : 'datetime',
+            categories: categories,
+            labels:{
+                //step:stepval,
+                rotation: 60,
+                //staggerLines: 1
+            }
+        },
+        yAxis: {
+            title: {
+                text: 'PV/IP'
+            },
+            plotLines: [{
+                value: 0,
+                width: 1,
+                color: '#808080'
+            }]
+        },
+        tooltip: {
+            valueSuffix: '',
+            shared: true
+        },
+        legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'middle',
+            borderWidth: 0
+        },
+        plotOptions: {
+            line: {
+                dataLabels: {
+                    enabled: true
+                }
+            }
+        },
+        series: [{
+            name: 'IP',
+            data: data1
+        }, {
+            name: 'PV',
+            data: data2
+        }
+        ]
+    });
+}
+</script>
+
+
+</block>

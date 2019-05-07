@@ -1,0 +1,28 @@
+@charset "UTF-8";
+body {
+  font: 12px/1.5 "微软雅黑",arial;
+  color: #1a1a1a; }
+
+h2 {
+  margin: 0;
+  padding: 0; }
+
+ul {
+  list-style: none;
+}
+
+ul li {
+  letter-spacing: 0;
+  word-spacing: 0;
+  list-style: none;
+}
+
+a {
+  font-size: 12px;
+  color: #444444;
+}
+/*iPhone、iPad默认按钮样式问题*/
+input[type="button"], input[type="submit"], input[type="reset"] {
+  -webkit-appearance: none; }
+
+/*# sourceMappingURL=reset.css.map */

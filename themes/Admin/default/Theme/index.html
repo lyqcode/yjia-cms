@@ -1,0 +1,26 @@
+<extend name="Public:base"/>
+
+<!--侧边导航-->
+<block name="aside">
+    <include file="Public:aside"/>
+</block>
+
+<block name="main">
+
+    <div class="row">
+        <volist name="themes" id="vo">
+        <div class="col-md-3">
+        <span class="thumbnail">
+        <a href="{:U($module_name.'/chose?theme='.$vo[name])}"><img src="{$vo.preview}"></a></span>
+        <b>
+        <if condition="$vo['use']==1">
+            <i style="float:right;color:#FB0000">已使用</i>
+        <else/>
+            <a href="{:U($module_name.'/chose?theme='.$vo[name])}">未使用</a>
+        </if>
+        名称:{$vo.name}</b>
+        </div>
+        </volist>
+    </div>
+
+</block>
